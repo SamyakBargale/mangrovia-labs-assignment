@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CarBot Negotiator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div id="app-container" class="app-container show-sidebar">
+        <!-- Sidebar: List of negotiations -->
+        <aside class="sidebar">
+            <header class="sidebar-header">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <i class="fa-solid fa-car-tunnel"></i>
+                    </div>
+                    <div>
+                        <h1>CarBot</h1>
+                        <p class="subtitle">AI Used-Car Negotiator</p>
+                    </div>
+                </div>
+                <button id="btn-new-neg-sidebar" class="btn btn-primary btn-icon-only" title="New Negotiation">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </header>
+            <div id="sessions-list" class="sessions-list">
+                <!-- Session items will be dynamically rendered here -->
+                <div class="empty-list-loader">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i>
+                    <p>Loading negotiations...</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Panel: Chat & Price Estimator -->
+        <main class="main-content">
+            <!-- State 1: Active Negotiation -->
+            <div id="active-negotiation-pane" class="content-pane" style="display: none;">
+                <!-- Header -->
+                <header class="chat-header">
+                    <button id="btn-back-to-sidebar" class="btn-back" title="Back to list">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <div class="car-info">
+                        <h2 id="chat-car-title">Car Details</h2>
+                        <div class="car-meta-badges" id="chat-car-badges">
+                            <!-- Badges (Year, Mileage) dynamically inserted here -->
+                        </div>
+                    </div>
+                    <div class="chat-actions">
+                        <span id="session-status-badge" class="badge">Active</span>
+                        <button id="btn-reset-session" class="btn btn-secondary btn-sm" title="Reset Negotiation">
+                            <i class="fa-solid fa-arrow-rotate-left"></i> <span class="btn-text">Reset</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Estimator Widget -->
+                <section class="estimator-widget" id="estimator-panel">
+                    <div class="estimator-header">
+                        <span><i class="fa-solid fa-magnifying-glass-chart"></i> Est. Market Value</span>
+                        <span id="estimator-range-text" class="range-value">€0 - €0</span>
+                    </div>
+                    
+                    <div class="gauge-container">
+                        <div class="gauge-track">
+                            <div class="gauge-fill"></div>
+                            <!-- Current offer pin -->
+                            <div id="gauge-pin" class="gauge-pin">
+                                <span id="gauge-pin-value" class="pin-value">€0</span>
+                            </div>
+                        </div>
+                        <div class="gauge-labels">
+                            <span id="gauge-label-low">Min</span>
+                            <span class="gauge-label-mid">Fair Value</span>
+                            <span id="gauge-label-high">Max</span>
+                        </div>
+                    </div>
+                    <p id="estimator-reasoning" class="estimator-reasoning"></p>
+                </section>
+
+                <!-- Chat Area -->
+                <section class="chat-log-container">
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Message bubbles dynamically inserted here -->
+                    </div>
+                    
+                    <!-- Bot Typing Indicator -->
+                    <div id="typing-indicator" class="typing-indicator" style="display: none;">
+                        <div class="typing-bubble">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Footer Input Area -->
+                <footer class="chat-footer-input">
+                    <form id="chat-form" class="chat-form">
+                        <input type="text" id="chat-input" placeholder="Type a message..." autocomplete="off">
+                        <button type="submit" class="btn btn-primary btn-send">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </footer>
+            </div>
+
+            <!-- State 2: Create New Session (Upload & Text Input) -->
+            <div id="new-negotiation-pane" class="content-pane">
+                <header class="chat-header mobile-only">
+                    <button id="btn-cancel-new" class="btn-back" title="Back to list">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </button>
+                    <h2>New Negotiation</h2>
+                </header>
+                
+                <div class="new-negotiation-container">
+                    <div class="new-neg-card glass-card">
+                        <div class="card-header">
+                            <i class="fa-solid fa-circle-plus header-icon"></i>
+                            <h2>Start a Negotiation</h2>
+                            <p>Provide vehicle specs or upload documents/photos to automatically generate a pricing range and initiate dialog.</p>
+                        </div>
+
+                        <form id="new-negotiation-form" class="new-negotiation-form">
+                            <!-- Drag & Drop Upload Zone -->
+                            <div class="drag-drop-zone" id="drop-zone">
+                                <input type="file" id="file-input" name="photo" accept="image/*" style="display: none;">
+                                <div class="zone-content" id="zone-prompt">
+                                    <div class="zone-icon">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                                    </div>
+                                    <h3>Drag & drop car photo or Italian Libretto</h3>
+                                    <p>or click here to select a file from your device</p>
+                                </div>
+                                <div class="zone-content" id="zone-preview" style="display: none;">
+                                    <div class="file-preview-card">
+                                        <div class="file-icon"><i class="fa-solid fa-file-image"></i></div>
+                                        <div class="file-details">
+                                            <span id="preview-filename">car_photo.jpg</span>
+                                            <span id="preview-filesize">0 KB</span>
+                                        </div>
+                                        <button type="button" id="btn-remove-file" class="btn-remove"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="desc-input">Vehicle Description (Optional if photo provided)</label>
+                                <textarea id="desc-input" name="description" placeholder="e.g. 2018 BMW 320d, 95k km, manual, good service history, asking EUR 18,000"></textarea>
+                            </div>
+
+                            <button type="submit" id="btn-submit-new" class="btn btn-primary btn-block">
+                                <i class="fa-solid fa-gears"></i> Initialize Negotiation
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full-screen Loading Overlay -->
+            <div id="loading-overlay" class="loading-overlay" style="display: none;">
+                <div class="loader-content">
+                    <div class="spinner-container">
+                        <div class="glowing-spinner"></div>
+                        <i class="fa-solid fa-car-side loader-car"></i>
+                    </div>
+                    <h3 id="loader-title">Processing Vehicle Specs</h3>
+                    <p id="loader-subtitle">Analyzing details with Anthropic Claude...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JS Client App -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

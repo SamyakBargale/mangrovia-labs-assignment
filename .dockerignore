@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Environment files — never bake secrets into images
+.env
+.env.*
+!.env.example
+
+# Database files — should be in a mounted volume, not in the image
+*.db
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Git
+.git/
+.gitignore
+
+# Tests (not needed at runtime)
+tests/
+
+# Documentation (not needed at runtime)
+*.md
+asset/
+bugs.md
+ROADMAP.md
+PRODUCT_IDEAS.md
+PROTOTYPE_README.md
