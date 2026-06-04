@@ -102,7 +102,7 @@ The user wanted a visual interface — drag-and-drop photo uploads, a price slid
 
 ### Architecture
 
-```
+```text
 Telegram Client
     └── Mini App webview (opens the FastAPI server URL)
             ├── GET  /api/sessions?user_id=X    → list this user's negotiations
@@ -149,20 +149,6 @@ A FastAPI application that:
 - `Telegram.WebApp.ready()` and `.expand()` are called on load to maximise the view and signal readiness.
 - `WebApp.initDataUnsafe.user.id` and `.chat.id` are read to scope API calls to the correct user.
 - Falls back to a hardcoded development user ID when running outside Telegram (browser dev mode).
-
-### HTTPS requirement and the localhost.run tunnel
-
-Telegram's Bot API only accepts HTTPS URLs for `WebAppInfo` buttons and `MenuButtonWebApp`. Any `http://` URL returns `400 Bad Request`.
-
-**Solution:**
-- `telegram_handler.py` checks `settings.WEBAPP_URL.startswith("https://")`.
-  - HTTPS → uses `WebAppInfo(url=...)` (opens inside Telegram as Mini App) and sets the persistent menu button.
-  - HTTP → falls back to `url=...` (opens in browser) and skips the menu button — **no crash**.
-- For local development, expose the FastAPI server via a zero-install SSH tunnel:
-  ```bash
-  ssh -R 80:localhost:8000 nokey@localhost.run
-  ```
-  This gives a free `https://xxxx.lhr.life` URL that Telegram accepts.
 
 ---
 
@@ -218,19 +204,4 @@ Tests use `tempfile.TemporaryDirectory` for isolated SQLite databases per test c
 │   ├── test_telegram_handler.py
 │   └── test_dashboard.py
 └── photos/                  ← downloaded car/libretto images (gitignored)
-```
-
----
-
-## 7. Key Design Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| aiosqlite over SQLAlchemy | Minimal dependencies; async-native; no ORM overhead for a prototype |
-| Pydantic for LLM output | Forces the model to stay within contract; validation errors are caught and retried |
-| Demo mode default | Anyone can clone and run with zero API keys; good for interviews and CI |
-| Session keyed by (chat, user, thread) | Supports private chats, group topics, and concurrent users without shared state |
-| State committed after send | Prevents invisible failures where DB says "negotiating" but user never saw the offer |
-| FastAPI for dashboard | Python-native, async, automatic OpenAPI docs, shares agent code with zero duplication |
-| HTTP→HTTPS fallback for WebApp | Local dev works immediately; upgrading to HTTPS (ngrok/localhost.run) enables Mini App mode with no code change |
-| Glassmorphism UI | Matches Telegram's dark aesthetic; feels native rather than a bolt-on webpage |
+```"

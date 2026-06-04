@@ -1,5 +1,7 @@
 # Roadmap
 
+See [PRODUCT_IDEAS.md](file:///Users/samyak/Desktop/mangrovia/mangrovia_interview_take_home/PRODUCT_IDEAS.md) for feature ideas.
+
 Audit date: 2026-06-04
 
 Goal: make the AI car negotiator reliably usable through Telegram, then evolve it from prototype to production-ready service.
